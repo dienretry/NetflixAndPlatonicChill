@@ -2,7 +2,6 @@
   "name": "Netflix And Platonic Chill",
   "version": "1.0.1",
   "manifest_version": 2,
-  "default_locale": "en",
   "description": "Synchronize Play/Pause on Netlix with other people",
   "icons": {
     "16": "icons/icon16.png",
