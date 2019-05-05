@@ -1,6 +1,6 @@
 # NeflixAndPlatonicChill-Client
 
-A first attempt at synchronization of play/pause for multiple chrome extension clients.
+A first attempt at a [chrome extension](https://chrome.google.com/webstore/detail/netflix-and-platonic-chil/dbamcdhalodonknionekdhlkdelakbfb) synchronizing of play/pause for multiple clients.
 
 ## How to use
 
