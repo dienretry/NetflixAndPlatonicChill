@@ -1,0 +1,29 @@
+{
+  "name": "Netflix And Platonic Chill",
+  "version": "1.0.1",
+  "manifest_version": 2,
+  "default_locale": "en",
+  "description": "Synchronize Play/Pause on Netlix with other people",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "scripts": [
+      "src/bg/background.js",
+      "js/socket.io.js"
+    ],
+    "persistent": false
+  },
+  "page_action":{
+    "default_popup": "src/popup/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.netflix.com/*"],
+      "js": ["src/inject/inject.js"]
+    }
+  ],
+  "permissions": ["activeTab", "webNavigation", "tabs"]
+}
