@@ -1,13 +1,29 @@
 chrome.webNavigation.onCompleted.addListener(background);
 chrome.webNavigation.onHistoryStateUpdated.addListener(background);
 
+var ports = [];
+var sockets = [];
+var generatedroomid = null;
+
+function disconnectEverything(){
+  ports.forEach(function(element) {
+    element.disconnect();
+  });
+  sockets.forEach(function(element) {
+    element.disconnect();
+  });
+}
+
 function background(details) {
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     if(tabs[0].url.startsWith("https://www.netflix.com/watch/")){
       //show popup
       chrome.pageAction.show(details.tabId);
+      disconnectEverything();
       var port = chrome.tabs.connect(details.tabId);
+      ports.push(port);
       var socket = io("https://ancient-river-20806.herokuapp.com/");
+      sockets.push(socket);
       socket.on("connect", function () {
         port.postMessage({action: "cleanup"});
         //messages from content script
@@ -16,7 +32,7 @@ function background(details) {
             port.postMessage({action: "run"});
           }
           else if(msg.status === "run-done"){
-            var roomid = getRoomIdFromURL(tabs[0].url);
+            var roomid = generatedroomid ? generatedroomid : getRoomIdFromURL(tabs[0].url);
             console.log(roomid)
             if(roomid){
               socket.emit("join", {isNew: false, id: roomid});
@@ -31,14 +47,11 @@ function background(details) {
               });
             }
           }
-          else if(msg.status === "createroom-done"){
-            socket.disconnect();
-          }
 
           if(msg.action === "control"){
             console.log(msg.type)
-            var roomid = getRoomIdFromURL(tabs[0].url)
-            console.log(roomid)
+            var roomid = generatedroomid ? generatedroomid : getRoomIdFromURL(tabs[0].url);
+            console.log(roomid);
             if(roomid){
               socket.emit("action", {id: roomid, value: msg.type});
             }
@@ -50,11 +63,12 @@ function background(details) {
           if(message.data === "createroom"){
             socket.emit("join", {isNew: true}, function(ans){
               if(ans.done){
-                roomid = ans.id;
+                generatedroomid = ans.id;
                 var port = chrome.tabs.connect(details.tabId);
-                var newURL = getURLSuffix(tabs[0].url)+"?roomid="+roomid
-                console.log(newURL)
-                port.postMessage({action: "createroom", url: newURL});
+                var newURL = getURL(tabs[0].url)+"?roomid="+generatedroomid;
+                console.log(newURL);
+                chrome.runtime.sendMessage({url: newURL});
+                //port.postMessage({action: "createroom", url: newURL});
               }
             });
           }
@@ -85,10 +99,10 @@ function getRoomIdFromURL(url){
   }
 }
 
-function getURLSuffix(url){
+function getURL(url){
   var results = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#&//=]*)/.exec(url);
   if(results){
-    return results[1];
+    return results[0];
   }
   return null;
 }

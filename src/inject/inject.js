@@ -174,7 +174,7 @@ function play(){
 function createRoom(url){
 	console.log("createroom")
 	//is not working for now
-	history.replaceState({}, "Netflix And Platonic Chill", url)
+	history.pushState({}, "Netflix And Platonic Chill", url)
 }
 
 /*
@@ -209,7 +209,6 @@ chrome.runtime.onConnect.addListener(function(port) {
 		else if(msg.action == "createroom"){
 			cleanup(pausePlayButton, currentProgressBar, playerControl, playerControlHidden, scrubberBar);
 			createRoom(msg.url);
-			port.postMessage({status: "createroom-done"});
 		}
 	});
 });
