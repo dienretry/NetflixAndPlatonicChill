@@ -31,6 +31,9 @@ function background(details) {
               });
             }
           }
+          else if(msg.status === "createroom-done"){
+            socket.disconnect();
+          }
 
           if(msg.action === "control"){
             console.log(msg.type)
@@ -59,7 +62,7 @@ function background(details) {
       });
     }
     else{
-      //show popup
+      //hide popup
       chrome.pageAction.hide(details.tabId);
     }
   });
@@ -69,11 +72,10 @@ const key = "roomid"
 function getRoomIdFromURL(url){
   var queryString = /^[^#?]*(\?[^#]+|)/.exec(url)[1];
   
-  // Escape special RegExp characters
+  //escape special RegExp characters
   const formattedkey = key.replace(/[[^$.|?*+(){}\\]/g, '\\$&');
-  // Create Regular expression
+  //create Regular expression
   var regex = new RegExp("(?:[?&]|^)" + formattedkey + "=([^&#]*)");
-  // Attempt to get a match
   var results = regex.exec(queryString);
   if(results){
     return decodeURIComponent(results[1].replace(/\+/g, " ")) || '';

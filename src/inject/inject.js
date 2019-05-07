@@ -93,7 +93,7 @@ function run(port, pausePlayButton, currentProgressBar, playerControl, playerCon
 				attributeOldValue: true
 			});
 
-			mutationObserverToClean = mutationObserver;
+			mutationObserverToClean.push(mutationObserver);
 
 			//on click on navigation bar
 			scrubberBar.addEventListener("click", function(e){
@@ -117,22 +117,24 @@ function run(port, pausePlayButton, currentProgressBar, playerControl, playerCon
 		}
 	}, 100);
 
-	pauseButtonCheckToClean = pauseButtonCheck;
+	pauseButtonCheckToClean.push(pauseButtonCheck);
 }
 
 
-//dont know if this is needed anymore (it is)
+//
 function cleanup(){
 	console.log("cleanup")
-	console.log(pauseButtonCheckToClean)
-	console.log(mutationObserverToClean)
 	if(pauseButtonCheckToClean)
 	{
-		clearInterval(pauseButtonCheckToClean);
+		pauseButtonCheckToClean.forEach(function(element) {
+			clearInterval(element);
+		});
 	}
 	if(mutationObserverToClean)
 	{
-		mutationObserverToClean.disconnect();
+		mutationObserverToClean.forEach(function(element) {
+			element.disconnect();
+		});
 	}
 	
 	pausePlayButton = null;
@@ -171,6 +173,7 @@ function play(){
 //
 function createRoom(url){
 	console.log("createroom")
+	//is not working for now
 	history.replaceState({}, "Netflix And Platonic Chill", url)
 }
 
@@ -178,8 +181,8 @@ function createRoom(url){
  * Content state machine
  */
 //listeners
-var pauseButtonCheckToClean = null;
-var mutationObserverToClean = null;
+var pauseButtonCheckToClean = [];
+var mutationObserverToClean = [];
 //dom elements
 var pausePlayButton = null;
 var currentProgressBar = null;
@@ -206,6 +209,7 @@ chrome.runtime.onConnect.addListener(function(port) {
 		else if(msg.action == "createroom"){
 			cleanup(pausePlayButton, currentProgressBar, playerControl, playerControlHidden, scrubberBar);
 			createRoom(msg.url);
+			port.postMessage({status: "createroom-done"});
 		}
 	});
 });
