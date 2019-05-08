@@ -6,7 +6,7 @@
 
     <style>
         body {
-            width: 550px;
+            width: 340px;
             height: 80px;
             background-color:#302b30;
         }
@@ -21,7 +21,7 @@
             letter-spacing: 3px;
         }
         #wrapper {
-            width: 550px;
+            width: 320px;
             height: 80px;
             display: flex;
             align-items: center;
@@ -53,22 +53,87 @@
         .classic-button:active {
             top:1px;
         }
+        label {
+            color: #ffffff;
+            clear: both;
+            display: block;
+            font-size: 1em;
+            font-weight: bold;
+            padding: 0.8em 0 0.2em 0;
+            user-select: none;
+        }
+
+        input, .copy-button {
+            float: left;
+            font-size: 1.5em;
+            padding: 3px 6px;
+            margin: 0;
+            border: 1px solid #333;
+            outline: 0;
+            box-shadow: none;
+        }
+
+        ::-moz-focus-inner { 
+            padding: 0;
+            border: 0;
+        }
+
+        input {
+            width: 15em;
+            background-color: #fff;
+            border-right: 0 none;
+            border-radius: 3px 0 0 3px;
+        }
+
+        .copy-button {
+            position: relative;
+            background-color: #aaa;
+            border-radius: 0 3px 3px 0;
+            cursor: pointer;
+        }
+
+        .copied::after {
+            position: absolute;
+            top: 12%;
+            right: 110%;
+            display: block;
+            content: "copied";
+            font-size: 0.75em;
+            padding: 2px 3px;
+            color: #fff;
+            background-color: rgba(92, 52, 107, 0.692);
+            border-radius: 3px;
+            opacity: 0;
+            will-change: opacity, transform;
+            animation: showcopied 1.5s ease;
+        }
+
+        @keyframes showcopied {
+            0% {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            70% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            100% {
+                opacity: 0;
+            }
+        }
     </style>
 
     <link rel="stylesheet" href="styles.css">
     <script src="popup.js"></script>
     <body>
         <div>
-            <!-- img src="img/arrow.png" alt="arrow" id="arrow" align="left" -->
             <div id=wrapper>
                 <a href="#" class="classic-button" id="create">Create room</a>
             </div>
-            
-            <p id="text">Share this link with your platonic chill person:</p>
-            <p id="url">We fucked up generating the url for you :(, try again later!</p>
-            <!-- div id=wrapper>
-                    <a href="#" class="classic-button" id="copy">Copy to clipboard</a>
-            </div -->
+
+            <label for="url" id="label">Share this link with your platonic chill person:</label>
+            <input type="text" id="url" value="" />
+            <button class="copy-button" data-copytarget="#url" id="copy-button">copy</button>
         </div>
     </body>
 </html>
