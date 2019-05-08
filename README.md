@@ -6,6 +6,6 @@ A first attempt at a [chrome extension](https://chrome.google.com/webstore/detai
 
 You just install the chrome extension, create a room using the popup, and share the link to you platonic friends to use.
 
-## Limitations
+## Explanation
 
-Garbage collection could use a cleanup.
+Coming soon.
