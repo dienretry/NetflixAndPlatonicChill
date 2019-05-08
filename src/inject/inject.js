@@ -1,28 +1,105 @@
-/*
- * DOM Elements
- */
 // dom class names
 const pauseButtonClassName = "touchable PlayerControls--control-element nfp-button-control default-control-button button-nfplayerPause";
 const playButtonClassName = "touchable PlayerControls--control-element nfp-button-control default-control-button button-nfplayerPlay";
-const currentProgressClassName = "current-progress";
 const playerControlClassName = "PlayerControls--control-element progress-control"
 const playerControlsHiddenClassName = "PlayerControls--control-element progress-control PlayerControls--control-element-hidden"
-const scrubberBarClassName = "scrubber-container"
+const scrubberContainerClassName = "scrubber-container"
+const srubberHeadClassName = "scrubber-head"
 
 // dom ids
 const pauseButtonClassIdentifier = "button-nfplayerPause";
 const playButtonClassIdentifier = "button-nfplayerPlay";
 const playControlHiddenIdentifier = "PlayerControls--control-element-hidden";
 
-// play pause trigger origin
-var isRemotelyTriggered = false;
+function inject(method, param){
+	var script = document.createElement("script");
+	//stringify the function to inject
+	script.innerHTML = method.toString();
+	//add call to function to call it right away
+	paramString = "";
+	if(param){
+		paramString += param.toString();
+	}
+	script.innerHTML += method.name+"("+paramString+");";
+	console.log(method.name);
 
+	//inject the function and call into head 
+	document.head.appendChild(script);
+}
 
-/*
- * functions
- */
+function pause(){
+	const videoPlayer = netflix
+		.appContext
+		.state
+		.playerApp
+		.getAPI()
+		.videoPlayer;
+
+	const playerSessionId = videoPlayer
+		.getAllPlayerSessionIds()[0];
+
+	const player = videoPlayer
+		.getVideoPlayerBySessionId(playerSessionId);
+	
+	player.pause();
+}
+
+function play(){
+	const videoPlayer = netflix
+		.appContext
+		.state
+		.playerApp
+		.getAPI()
+		.videoPlayer;
+
+	const playerSessionId = videoPlayer
+		.getAllPlayerSessionIds()[0];
+
+	const player = videoPlayer
+		.getVideoPlayerBySessionId(playerSessionId);
+
+	player.play();
+}
+
+function seek(timestamp){
+	const videoPlayer = netflix
+		.appContext
+		.state
+		.playerApp
+		.getAPI()
+		.videoPlayer;
+
+	const playerSessionId = videoPlayer
+		.getAllPlayerSessionIds()[0];
+
+	const player = videoPlayer
+		.getVideoPlayerBySessionId(playerSessionId);
+
+	player.seek(timestamp);
+}
+
+function getCurrentTime(){
+	const videoPlayer = netflix
+		.appContext
+		.state
+		.playerApp
+		.getAPI()
+		.videoPlayer;
+
+	const playerSessionId = videoPlayer
+		.getAllPlayerSessionIds()[0];
+
+	const player = videoPlayer
+		.getVideoPlayerBySessionId(playerSessionId);
+
+	console.log(player.getCurrentTime());
+}
+
 //is progress bar hidden
-function isPlayerControlHidden(bar, hiddenBar){
+function isPlayerControlHidden(){
+	const bar = document.getElementsByClassName(playerControlClassName)[0];
+	const hiddenBar = document.getElementsByClassName(playerControlsHiddenClassName)[0];
+
 	if(typeof hiddenBar !== "undefined")
 	{
 		return hiddenBar.getAttribute("class").includes(playControlHiddenIdentifier);
@@ -35,98 +112,89 @@ function isPlayerControlHidden(bar, hiddenBar){
 }
 
 //get current progress
-function getCurrentProgress(playerControl, playerControlHidden, currentProgressBar)
+function getCurrentProgress()
 {
-	return isPlayerControlHidden(playerControl, playerControlHidden) ? null : currentProgressBar.getAttribute("style");
+	//const currentProgressBar = document.getElementsByClassName(currentProgressClassName)[0];
+	const scrubberHead = document.getElementsByClassName(srubberHeadClassName)[0];
+	if(typeof scrubberHead !== "undefined" && !isPlayerControlHidden()){
+		var results = /((\d)?:)?(\d?\d):(\d{2}) of/.exec(scrubberHead.getAttribute("aria-valuetext"));
+		if(results){
+			return results[2] ? 
+			((parseInt(results[2])*3600)+(parseInt(results[3])*60)+parseInt(results[4]))*1000 
+			: ((parseInt(results[3])*60)+parseInt(results[4]))*1000;
+		}
+		else{
+			return null;
+		}
+	}
+	else{
+		return null;
+	}
 }
 
-function run(port, pausePlayButton, currentProgressBar, playerControl, playerControlHidden, scrubberBar){
-	console.log("run")
-
-	//look for play/pause button id
-	//play/pause button is not loaded at first
-	//html element is undefined until it exists on the page
-	var mutationObserver = null;
-	var pauseButtonCheck = setInterval(function() {
-		pausePlayButton = document.getElementsByClassName(pauseButtonClassName)[0];
-		currentProgressBar = document.getElementsByClassName(currentProgressClassName)[0];
-		playerControl = document.getElementsByClassName(playerControlClassName)[0];
-		playerControlHidden = document.getElementsByClassName(playerControlsHiddenClassName)[0];
-		scrubberBar = document.getElementsByClassName(scrubberBarClassName)[0];
-
-		if(typeof pausePlayButton !== "undefined" && typeof currentProgressBar !== "undefined" && typeof scrubberBar !== "undefined" && (typeof playerControl !== "undefined" || typeof playerControlHidden !== "undefined" )) {
-			clearInterval(pauseButtonCheck);
-			console.log("play/pause button exists now");
-			
-			//look for pause play action
-			//class name of play/pause button changes when play pause action happens
-			mutationObserver = new MutationObserver(function(mutations) {
-				mutations.forEach(function(mutation) {
-					if(mutation.attributeName == "class" && 
-						mutation.target.className.includes(playButtonClassIdentifier) && 
-						mutation.oldValue.includes(pauseButtonClassIdentifier))
-					{
-						var action = {action: "control", type: "play", timestamp: getCurrentProgress(playerControl, playerControlHidden, currentProgressBar)};
-						console.log(action);
-						if(!isRemotelyTriggered){
-							port.postMessage(action);
-						}
-						isRemotelyTriggered = false;
-					}
-					else if(mutation.attributeName == "class" && 
-						mutation.target.className.includes(pauseButtonClassIdentifier) && 
-						mutation.oldValue.includes(playButtonClassIdentifier))
-					{
-						var action = {action: "control", type: "pause", timestamp: getCurrentProgress(playerControl, playerControlHidden, currentProgressBar)};
-						console.log(action);
-						if(!isRemotelyTriggered){
-							port.postMessage(action);
-						}
-						isRemotelyTriggered = false;
-					}
-				});
-			});
-
-			//hook up the play pause listener
-			mutationObserver.observe(pausePlayButton, {
-				attributes: true,
-				attributeOldValue: true
-			});
-
-			mutationObserverToClean.push(mutationObserver);
-
-			//on click on navigation bar
-			scrubberBar.addEventListener("click", function(e){
-				event = e
-				var action = {"type": "goto", "timestamp": getCurrentProgress(playerControl, playerControlHidden, currentProgressBar)};
-				console.log(action);
-			});
-
-			//TODO: remove event listener for debug 
-			document.addEventListener("keypress", function(e){
-				if(e.code === "KeyZ")
-				{
-					pausePlayButton.click()
+var isLocallyTriggered = true;
+var intervalsToClean = []
+var mutationObserverToClean = []
+function listenToPausePlay(pauseButton, port){
+	var mutationObserver = new MutationObserver(function(mutations) {
+		mutations.forEach(function(mutation) {
+	
+			if(mutation.attributeName == "class" && 
+				mutation.target.className.includes(playButtonClassIdentifier) && 
+				mutation.oldValue.includes(pauseButtonClassIdentifier))
+			{
+				if(isLocallyTriggered){
+					var action = {action: "control", type: "play"};
+					console.log(action);
+					port.postMessage(action);
 				}
-				if(e.code === "KeyX")
-				{
-					console.log(event)
-					scrubberBar.click()
+				isLocallyTriggered = true;
+			}
+			else if(mutation.attributeName == "class" && 
+				mutation.target.className.includes(pauseButtonClassIdentifier) && 
+				mutation.oldValue.includes(playButtonClassIdentifier))
+			{
+				if(isLocallyTriggered){
+					var action = {action: "control", type: "pause"};
+					console.log(action);
+					port.postMessage(action);
 				}
-			}, false);
+				isLocallyTriggered = true;
+			}
+		});
+	});
+
+	
+	mutationObserver.observe(pauseButton, {
+		attributes: true,
+		attributeOldValue: true
+	});
+
+	mutationObserverToClean.push(mutationObserver);
+}
+
+function listenToPausePlayOnceLoaded(port){
+	console.log("listen to pause/play")
+	var pausePlayButtonCheck = setInterval(function() {
+		pauseButton = document.getElementsByClassName(pauseButtonClassName)[0];
+		playButton = document.getElementsByClassName(playButtonClassName)[0];
+		if(typeof pauseButton !== "undefined"){
+			clearInterval(pausePlayButtonCheck);
+			listenToPausePlay(pauseButton, port);
+		}
+		else if(typeof playButton !== "undefined"){
+			clearInterval(pausePlayButtonCheck);
+			listenToPausePlay(playButton, port);
 		}
 	}, 100);
-
-	pauseButtonCheckToClean.push(pauseButtonCheck);
+	intervalsToClean.push(pausePlayButtonCheck);
 }
 
-
-//
 function cleanup(){
 	console.log("cleanup")
-	if(pauseButtonCheckToClean)
+	if(intervalsToClean)
 	{
-		pauseButtonCheckToClean.forEach(function(element) {
+		intervalsToClean.forEach(function(element) {
 			clearInterval(element);
 		});
 	}
@@ -136,79 +204,63 @@ function cleanup(){
 			element.disconnect();
 		});
 	}
-	
-	pausePlayButton = null;
-	currentProgressBar = null;
-	playerControl = null;
-	playerControlHidden = null;
-	scrubberBar = null;
 }
-
-//
-function pause(){
-	var playButton = document.getElementsByClassName(playButtonClassName)[0];
-	if(typeof playButton !== "undefined" && playButton && playButton.getAttribute("class").includes(playButtonClassIdentifier)){
-		console.log("play")
-		playButton.click();
-		isRemotelyTriggered = true;
-	}
-	else{
-		console.log("already paused")
-	}
-}
-
-//
-function play(){
-	var pauseButton = document.getElementsByClassName(pauseButtonClassName)[0];
-	if(typeof pauseButton !== "undefined" && pauseButton && pauseButton.getAttribute("class").includes(pauseButtonClassIdentifier)){
-		console.log("pause")
-		pauseButton.click();
-		isRemotelyTriggered = true;
-	}
-	else{
-		console.log("already playing")
-	}
-}
-
-//
-function createRoom(url){
-	console.log("createroom")
-	//is not working for now
-	history.pushState({}, "Netflix And Platonic Chill", url)
-}
-
-/*
- * Content state machine
- */
-//listeners
-var pauseButtonCheckToClean = [];
-var mutationObserverToClean = [];
-//dom elements
-var pausePlayButton = null;
-var currentProgressBar = null;
-var playerControl = null;
-var playerControlHidden = null;
-var scrubberBar = null;
 
 chrome.runtime.onConnect.addListener(function(port) {
 	port.onMessage.addListener(function(msg) {
-		if (msg.action == "run"){
-			run(port, pausePlayButton, currentProgressBar, playerControl, playerControlHidden, scrubberBar);
-			port.postMessage({status: "run-done"});
+		if (msg.action == "pause"){
+			inject(pause);
+			isLocallyTriggered = false;
+		}
+		else if (msg.action == "play"){
+			inject(play);
+			isLocallyTriggered = false;
+		}
+		else if (msg.action == "seek"){
+			inject(seek, msg.timestamp);//timestamp in ms
+		}
+		//not used
+		else if (msg.action == "timestamp"){
+			console.log(getCurrentProgress());//timestamp in ms
+			inject(getCurrentTime)//for debug
+		}
+		else if (msg.action == "listen"){
+			listenToPausePlayOnceLoaded(port);//attach play/pause listener
+			listenToSeekOnceLoaded();//attach seek listener
+			port.postMessage({status: "listen-done"});
 		}
 		else if (msg.action == "cleanup"){
-			cleanup(pausePlayButton, currentProgressBar, playerControl, playerControlHidden, scrubberBar);
+			cleanup();//clean intervals and mutation observers
+			//cleanSeekListener();
 			port.postMessage({status: "cleanup-done"});
 		}
-		else if(msg.action == "pause"){
-			pause();
-		}
-		else if(msg.action == "play"){
-			play();
-		}
-		else if(msg.action == "createroom"){
-			cleanup(pausePlayButton, currentProgressBar, playerControl, playerControlHidden, scrubberBar);
-			createRoom(msg.url);
-		}
 	});
+
+	function sendSeekTimestamp(){
+		var action = {action: "control", "type": {type: "seek", timestamp: getCurrentProgress()}};
+		console.log(action);
+		port.postMessage(action);
+	}
+
+	function listenToSeekOnceLoaded(){
+		console.log("listen to seek")
+		var seekBarCheck = setInterval(function() {
+			var scrubberContainer = document.getElementsByClassName(scrubberContainerClassName)[0];
+			if(typeof scrubberContainer !== "undefined"){
+				clearInterval(scrubberContainer);
+				scrubberContainer.addEventListener("click", sendSeekTimestamp);
+			}
+		}, 100);
+		intervalsToClean.push(seekBarCheck);
+	}
+	
+	//not cleaned because the bar is hidden most of the time
+	/*function cleanSeekListener(){
+		var scrubberContainer = document.getElementsByClassName(scrubberContainerClassName)[0];
+		console.log(scrubberContainer)
+		if(typeof scrubberContainer !== "undefined"){
+			scrubberContainer.removeEventListener("click", sendSeekTimestamp); 
+		}
+	}*/
 });
+

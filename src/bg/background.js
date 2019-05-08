@@ -29,20 +29,23 @@ function background(details) {
         //messages from content script
         port.onMessage.addListener(function(msg) {
           if(msg.status === "cleanup-done"){
-            port.postMessage({action: "run"});
+            port.postMessage({action: "listen"});
           }
-          else if(msg.status === "run-done"){
+          else if(msg.status === "listen-done"){
             var roomid = generatedroomid ? generatedroomid : getRoomIdFromURL(tabs[0].url);
             console.log(roomid)
             if(roomid){
               socket.emit("join", {isNew: false, id: roomid});
               socket.on("action", function(socketmsg){
                 console.log(socketmsg);
-                if(socketmsg == "pause"){
+                if(socketmsg === "pause"){
                   port.postMessage({action: "pause"});
                 }
-                else if(socketmsg == "play"){
+                else if(socketmsg === "play"){
                   port.postMessage({action: "play"});
+                }
+                else if(socketmsg.type === "seek"){
+                  port.postMessage({action: "seek", timestamp: socketmsg.timestamp});
                 }
               });
             }
@@ -106,3 +109,4 @@ function getURL(url){
   }
   return null;
 }
+
