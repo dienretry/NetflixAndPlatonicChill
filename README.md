@@ -1,6 +1,6 @@
 # NeflixAndPlatonicChill-Client
 
-A first attempt at a [chrome extension](https://chrome.google.com/webstore/detail/netflix-and-platonic-chil/dbamcdhalodonknionekdhlkdelakbfb) synchronizing of play/pause for multiple clients.
+A [chrome extension](https://chrome.google.com/webstore/detail/netflix-and-platonic-chil/dbamcdhalodonknionekdhlkdelakbfb) that synchronizes watching Netflix between multiple clients.
 
 ## How to use
 
