@@ -133,6 +133,7 @@ function getCurrentProgress()
 }
 
 var isLocallyTriggered = true;
+var isSeek = false;
 var intervalsToClean = []
 var mutationObserverToClean = []
 function listenToPausePlay(pauseButton, port){
@@ -143,23 +144,27 @@ function listenToPausePlay(pauseButton, port){
 				mutation.target.className.includes(playButtonClassIdentifier) && 
 				mutation.oldValue.includes(pauseButtonClassIdentifier))
 			{
-				if(isLocallyTriggered){
+				console.log(isLocallyTriggered)
+				if(isLocallyTriggered || (!isLocallyTriggered && isSeek)){
 					var action = {action: "control", type: "pause"};
 					console.log(action);
 					port.postMessage(action);
 				}
 				isLocallyTriggered = true;
+				isSeek = false;
 			}
 			else if(mutation.attributeName == "class" && 
 				mutation.target.className.includes(pauseButtonClassIdentifier) && 
 				mutation.oldValue.includes(playButtonClassIdentifier))
 			{
-				if(isLocallyTriggered){
+				console.log(isLocallyTriggered)
+				if(isLocallyTriggered || (!isLocallyTriggered && isSeek)){
 					var action = {action: "control", type: "play"};
 					console.log(action);
 					port.postMessage(action);
 				}
 				isLocallyTriggered = true;
+				isSeek = false;
 			}
 		});
 	});
@@ -237,9 +242,10 @@ chrome.runtime.onConnect.addListener(function(port) {
 	});
 
 	function sendSeekTimestamp(){
-		var action = {action: "control", "type": {type: "seek", timestamp: getCurrentProgress()}};
+		action = {action: "control", type: {type: "seek", timestamp: getCurrentProgress()}};
 		console.log(action);
 		port.postMessage(action);
+		isSeek = true;
 	}
 
 	function listenToSeekOnceLoaded(){
