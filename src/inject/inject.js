@@ -144,7 +144,7 @@ function listenToPausePlay(pauseButton, port){
 				mutation.oldValue.includes(pauseButtonClassIdentifier))
 			{
 				if(isLocallyTriggered){
-					var action = {action: "control", type: "play"};
+					var action = {action: "control", type: "pause"};
 					console.log(action);
 					port.postMessage(action);
 				}
@@ -155,7 +155,7 @@ function listenToPausePlay(pauseButton, port){
 				mutation.oldValue.includes(playButtonClassIdentifier))
 			{
 				if(isLocallyTriggered){
-					var action = {action: "control", type: "pause"};
+					var action = {action: "control", type: "play"};
 					console.log(action);
 					port.postMessage(action);
 				}
