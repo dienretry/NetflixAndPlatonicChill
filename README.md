@@ -9,3 +9,9 @@ You just install the chrome extension, create a room using the popup, and share 
 ## Explanation
 
 Coming soon.
+
+## Preview
+
+<p align="center">
+  <img width="460" height="300" src="https://media.giphy.com/media/YlYsVO0qLnutYACu62/giphy.gif">
+</p>
