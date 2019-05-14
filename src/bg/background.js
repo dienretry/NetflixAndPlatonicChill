@@ -22,7 +22,7 @@ function background(details) {
       disconnectEverything();
       var port = chrome.tabs.connect(details.tabId);
       ports.push(port);
-      var socket = io("https://ancient-river-20806.herokuapp.com/");
+      var socket = io("http://netflixandplatonicchill.herokuapp.com/");
       sockets.push(socket);
       socket.on("connect", function () {
         port.postMessage({action: "cleanup"});
