@@ -1,4 +1,4 @@
-# NetflixAndPlatonicChill-Client
+# NetflixAndPlatonicChill
 
 A [chrome extension](https://chrome.google.com/webstore/detail/netflix-and-platonic-chil/dbamcdhalodonknionekdhlkdelakbfb) that synchronizes watching Netflix between multiple clients.
 
